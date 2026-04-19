@@ -1,78 +1,124 @@
 const express = require("express");
+const pool = require("./db");
+
 const app = express();
-
-// Middleware para parsear JSON
 app.use(express.json());
-
-// === DATOS DE EJEMPLO (sin BD aún) ===
-let tareas = [
-  { id: 1, titulo: "Aprender JavaScript", completado: true },
-  { id: 2, titulo: "Aprender TypeScript", completado: false },
-  { id: 3, titulo: "Crear API con Express", completado: false }
-];
-
-let contador = 3;
 
 // === ENDPOINTS ===
 
 // GET /api/tareas - Obtener todas las tareas
-app.get("/api/tareas", (req, res) => {
-  res.json(tareas);
+app.get("/api/tareas", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM tareas ORDER BY id");
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Error al obtener tareas" });
+  }
 });
 
 // GET /api/tareas/:id - Obtener una tarea específica
-app.get("/api/tareas/:id", (req, res) => {
-  const tarea = tareas.find(t => t.id === parseInt(req.params.id));
-  
-  if (!tarea) {
-    return res.status(404).json({ error: "Tarea no encontrada" });
+app.get("/api/tareas/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query("SELECT * FROM tareas WHERE id = $1", [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Tarea no encontrada" });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Error al obtener tarea" });
   }
-  
-  res.json(tarea);
 });
 
 // POST /api/tareas - Crear una nueva tarea
-app.post("/api/tareas", (req, res) => {
-  const { titulo } = req.body;
-  
-  if (!titulo) {
-    return res.status(400).json({ error: "El título es requerido" });
+app.post("/api/tareas", async (req, res) => {
+  try {
+    const { titulo, descripcion, prioridad } = req.body;
+    
+    if (!titulo) {
+      return res.status(400).json({ error: "El título es requerido" });
+    }
+    
+    const result = await pool.query(
+      "INSERT INTO tareas (titulo, descripcion, prioridad) VALUES ($1, $2, $3) RETURNING *",
+      [titulo, descripcion || null, prioridad || "media"]
+    );
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Error al crear tarea" });
   }
-  
-  const nuevaTarea = {
-    id: ++contador,
-    titulo,
-    completado: false
-  };
-  
-  tareas.push(nuevaTarea);
-  res.status(201).json(nuevaTarea);
 });
 
 // PUT /api/tareas/:id - Actualizar una tarea
-app.put("/api/tareas/:id", (req, res) => {
-  const tarea = tareas.find(t => t.id === parseInt(req.params.id));
-  
-  if (!tarea) {
-    return res.status(404).json({ error: "Tarea no encontrada" });
+app.put("/api/tareas/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { titulo, descripcion, completado, prioridad } = req.body;
+    
+    // Construir query dinámicamente
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+    
+    if (titulo !== undefined) {
+      updates.push(`titulo = $${paramCount}`);
+      values.push(titulo);
+      paramCount++;
+    }
+    if (descripcion !== undefined) {
+      updates.push(`descripcion = $${paramCount}`);
+      values.push(descripcion);
+      paramCount++;
+    }
+    if (completado !== undefined) {
+      updates.push(`completado = $${paramCount}`);
+      values.push(completado);
+      paramCount++;
+    }
+    if (prioridad !== undefined) {
+      updates.push(`prioridad = $${paramCount}`);
+      values.push(prioridad);
+      paramCount++;
+    }
+    
+    updates.push(`actualizado_en = CURRENT_TIMESTAMP`);
+    values.push(id);
+    
+    const query = `UPDATE tareas SET ${updates.join(", ")} WHERE id = $${paramCount} RETURNING *`;
+    const result = await pool.query(query, values);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Tarea no encontrada" });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Error al actualizar tarea" });
   }
-  
-  if (req.body.titulo) tarea.titulo = req.body.titulo;
-  if (req.body.completado !== undefined) tarea.completado = req.body.completado;
-  
-  res.json(tarea);
 });
 
 // DELETE /api/tareas/:id - Eliminar una tarea
-app.delete("/api/tareas/:id", (req, res) => {
-  const index = tareas.findIndex(t => t.id === parseInt(req.params.id));
-  
-  if (index === -1) {
-    return res.status(404).json({ error: "Tarea no encontrada" });
+app.delete("/api/tareas/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query("DELETE FROM tareas WHERE id = $1 RETURNING *", [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Tarea no encontrada" });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Error al eliminar tarea" });
   }
-  
-  const tareaEliminada = tareas.splice(index, 1);
-  res.json(tareaEliminada[0]);
 });
 
 // === INICIAR SERVIDOR ===
@@ -80,5 +126,6 @@ app.delete("/api/tareas/:id", (req, res) => {
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
-  console.log(`📝 Prueba: GET http://localhost:${PORT}/api/tareas`);
+  console.log(`📝 Conectado a PostgreSQL`);
+  console.log(`📊 Base de datos: app_productividad`);
 });
