@@ -33,31 +33,31 @@ export default function Home() {
     cargarTareas();
   }
 
-  async function completarTarea(id: number, completada: boolean) {
+  async function completarTarea(id: number, completado: boolean) {
     await fetch(`http://localhost:3000/api/tareas/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completado: !completada }),
+      body: JSON.stringify({ completado: !completado }),
     });
     cargarTareas();
   }
 
   return (
-  <main className="min-h-screen bg-gray-50 py-10 px-4">
-    <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Mis tareas</h1>
-      <CreateTaskForm onCrear={crearTarea} />
-      <ul className="mt-6 space-y-3">
-        {tareas.map((tarea: any) => (
-          <TaskItem
-            key={tarea.id}
-            tarea={tarea}
-            onCompletar={completarTarea}
-            onEliminar={eliminarTarea}
-          />
-        ))}
-      </ul>
-    </div>
-  </main>
-);
+    <main className="min-h-screen bg-gray-50 py-10 px-4">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Mis tareas</h1>
+        <CreateTaskForm onCrear={crearTarea} />
+        <ul className="mt-6 space-y-3">
+          {tareas.map((tarea: any) => (
+            <TaskItem
+              key={tarea.id}
+              tarea={tarea}
+              onCompletar={completarTarea}
+              onEliminar={eliminarTarea}
+            />
+          ))}
+        </ul>
+      </div>
+    </main>
+  );
 }
