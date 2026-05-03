@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Tarea {
+  id                String   @id @default(cuid())
+  titulo            String
+  descripcion       String?
+  completado        Boolean  @default(false)
+  fecha_vencimiento String?
+  prioridad         String   @default("media")
+  userId            String
+  creadoEn          DateTime @default(now())
+  actualizadoEn     DateTime @updatedAt
+}
+
+model Rutina {
+  id         String   @id @default(cuid())
+  nombre     String
+  diaSemana  Int
+  horaInicio String
+  horaFin    String
+  color      String?
+  userId     String
+  creadoEn   DateTime @default(now())
+}
+
+model Objetivo {
+  id            String   @id @default(cuid())
+  nombre        String
+  tipo          String
+  deadline      String?
+  meta          Float?
+  unidad        String?
+  periodo       String?
+  progreso      Float    @default(0)
+  userId        String
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+}
+
+model Evento {
+  id          String   @id @default(cuid())
+  titulo      String
+  descripcion String?
+  fecha       String
+  horaInicio  String?
+  horaFin     String?
+  userId      String
+  creadoEn    DateTime @default(now())
+}
