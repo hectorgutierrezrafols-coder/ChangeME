@@ -154,11 +154,12 @@ export default function Home() {
       setToastVisible(true);
     }
   }, [tareas, horaActual]);
-
+    
   async function cargarTareas() {
     setCargando(true);
     const res = await fetch(`${BACKEND}/api/tareas`);
     const data = await res.json();
+    console.log("TAREAS DEL BACKEND:", JSON.stringify(data, null, 2));
     setTareas(data);
     setCargando(false);
   }
@@ -270,8 +271,7 @@ export default function Home() {
           <p style={{ fontSize: 12, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>{fecha}</p>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <h1 style={{ fontSize: 28, fontWeight: 700, color: "#1A1A1A", margin: "0 0 4px", letterSpacing: "-0.5px" }}>
-              {saludo}{user?.firstName ? `, ${user.firstName}` : ""}
-            </h1>
+              {saludo}{user?.firstName ? `, ${user.firstName}` : user?.username ? `, ${user.username}` : ""}            </h1>
             <span style={{ fontSize: 13, color: "#9CA3AF", marginTop: 4 }}>{horaActual}</span>
           </div>
           {tareas.length > 0 && (
@@ -602,8 +602,7 @@ function HeroTarea({ tarea, onCompletar, onEliminar, onEditar }: {
         borderRadius: "0 16px 16px 0", padding: "18px 18px 18px 16px",
         cursor: "pointer", userSelect: "none",
         border: `0.5px solid ${animando ? "#BBF7D0" : hover ? "#D1D5DB" : "#E5E7EB"}`,
-        borderLeft: `4px solid ${animando ? "#059669" : p.dot}`,
-        boxShadow: hover && !animando ? "0 8px 24px rgba(0,0,0,0.08)" : "0 2px 8px rgba(0,0,0,0.04)",
+        borderLeft: `4px solid ${animando ? "#059669" : hover ? p.dot : "#E5E7EB"}`,        boxShadow: hover && !animando ? "0 8px 24px rgba(0,0,0,0.08)" : "0 2px 8px rgba(0,0,0,0.04)",
         transition: "all 0.4s ease",
         opacity: animando ? 0.4 : 1,
         transform: animando ? "scale(0.98)" : "scale(1)",
@@ -631,8 +630,7 @@ function HeroTarea({ tarea, onCompletar, onEliminar, onEditar }: {
             <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 8px", lineHeight: 1.4 }}>{tarea.descripcion}</p>
           )}
           <p style={{ fontSize: 12, color: vencida ? "#EF4444" : "#9CA3AF", margin: 0, fontWeight: vencida ? 600 : 400, opacity: animando ? 0 : 1, transition: "opacity 0.4s ease" }}>
-            {[p.label, tarea.fecha_vencimiento ? formatDeadline(tarea) : null].filter(Boolean).join(" · ")}
-          </p>
+            {[p.label, tarea.fecha_vencimiento ? formatDeadline(tarea) : "Sin fecha"].join(" · ")}          </p>
         </div>
         <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
           <button onClick={e => { e.stopPropagation(); onEditar(tarea); }}
@@ -678,8 +676,7 @@ function TareaItem({ tarea, onCompletar, onEliminar, onEditar }: {
         display: "flex", alignItems: "center", gap: 12,
         background: animando ? "#F0FDF4" : "#FFFFFF",
         border: `0.5px solid ${animando ? "#BBF7D0" : hover ? "#D1D5DB" : "#E5E7EB"}`,
-        borderLeft: `3px solid ${animando ? "#059669" : tarea.completado ? "#E5E7EB" : p.dot}`,
-        borderRadius: "0 12px 12px 0", padding: "11px 14px",
+        borderLeft: `3px solid ${animando ? "#059669" : tarea.completado ? "#E5E7EB" : hover ? p.dot : "#E5E7EB"}`,        borderRadius: "0 12px 12px 0", padding: "11px 14px",
         cursor: "pointer", userSelect: "none",
         transition: "all 0.4s ease",
         opacity: animando ? 0.3 : tarea.completado ? 0.5 : 1,
@@ -705,8 +702,7 @@ function TareaItem({ tarea, onCompletar, onEliminar, onEditar }: {
           {tarea.titulo}
         </span>
         <p style={{ fontSize: 12, color: vencida ? "#EF4444" : "#9CA3AF", margin: "3px 0 0", fontWeight: vencida ? 600 : 400, opacity: animando ? 0 : 1, transition: "opacity 0.4s ease" }}>
-          {[p.label, tarea.fecha_vencimiento ? formatDeadline(tarea) : null].filter(Boolean).join(" · ")}
-        </p>
+          {[p.label, tarea.fecha_vencimiento ? formatDeadline(tarea) : "Sin fecha"].join(" · ")}        </p>
       </div>
       <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
         <button onClick={e => { e.stopPropagation(); onEditar(tarea); }}
