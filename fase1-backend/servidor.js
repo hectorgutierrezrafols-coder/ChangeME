@@ -4,6 +4,7 @@ const cors = require('cors');
 const express = require('express')
 const prisma = require('./db')
 const { clerkMiddleware, requireAuth } = require('./middleware/auth')
+const { ejecutarAgente } = require('./agente')
 
 const app = express()
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3007' }));
@@ -321,6 +322,21 @@ app.delete('/api/eventos/:id', requireAuth, async (req, res) => {
   } catch (error) {
     if (error.code === 'P2025') return res.status(404).json({ error: 'Evento no encontrado' })
     res.status(500).json({ error: 'Error al eliminar evento' })
+  }
+})
+
+
+// ── AGENTE IA ─────────────────────────────────────────────────────────────────
+
+app.post('/api/agente', requireAuth, async (req, res) => {
+  try {
+    const { mensaje } = req.body
+    if (!mensaje) return res.status(400).json({ error: 'El campo "mensaje" es requerido' })
+    const respuesta = await ejecutarAgente(mensaje, req.userId)
+    res.json({ respuesta })
+  } catch (error) {
+    console.error('Error en agente:', error)
+    res.status(500).json({ error: 'Error en el agente de IA' })
   }
 })
 

@@ -11,12 +11,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0",
     "@clerk/express": "^2.1.12",
     "@prisma/client": "^6.16.0",
-    "prisma": "^6.16.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "prisma": "^6.16.0"
   }
 }
